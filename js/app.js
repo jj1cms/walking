@@ -126,7 +126,7 @@ function initMap() {
     attribution: '&copy; OpenStreetMap contributors',
   }).addTo(map);
 
-  routeLine = L.polyline([], { color: '#14b8a6', weight: 5, opacity: 0.85 }).addTo(map);
+  routeLine = L.polyline([], { color: '#ff3b30', weight: 5, opacity: 0.9 }).addTo(map);
 
   // ユーザーが地図を動かしたら追従を解除
   map.on('dragstart', () => { following = false; });
@@ -136,10 +136,10 @@ function updateLocationMarker(lat, lng, accuracy) {
   const latlng = [lat, lng];
   if (!locationMarker) {
     locationMarker = L.circleMarker(latlng, {
-      radius: 8, color: '#fff', weight: 2, fillColor: '#14b8a6', fillOpacity: 1,
+      radius: 8, color: '#fff', weight: 2, fillColor: '#ff3b30', fillOpacity: 1,
     }).addTo(map);
     accuracyCircle = L.circle(latlng, {
-      radius: accuracy, color: '#14b8a6', weight: 1, fillColor: '#14b8a6', fillOpacity: 0.1,
+      radius: accuracy, color: '#ff3b30', weight: 1, fillColor: '#ff3b30', fillOpacity: 0.12,
     }).addTo(map);
   } else {
     locationMarker.setLatLng(latlng);
