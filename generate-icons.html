@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>アイコン生成ツール</title>
+<style>
+  body { font-family: -apple-system, sans-serif; background:#0b1220; color:#e8eefc; padding:24px; line-height:1.7; }
+  h1 { font-size:20px; }
+  p { color:#9aa8c7; font-size:14px; }
+  .row { display:flex; gap:16px; flex-wrap:wrap; margin-top:20px; }
+  .item { text-align:center; }
+  canvas { background:#131c2e; border-radius:12px; }
+  a.dl { display:inline-block; margin-top:8px; background:#14b8a6; color:#04231f; text-decoration:none; padding:8px 14px; border-radius:8px; font-weight:700; font-size:13px; }
+  code { background:#1b2740; padding:2px 6px; border-radius:4px; }
+</style>
+</head>
+<body>
+  <h1>PWA アイコン生成ツール</h1>
+  <p>
+    iPhoneのホーム画面アイコンをきれいに表示するためのPNGを作ります。<br>
+    下の各画像の「ダウンロード」を押して、ファイル名そのままで <code>icons/</code> フォルダに保存してください。
+  </p>
+  <div class="row" id="out"></div>
+
+<script>
+const SIZES = [
+  { size: 192, name: 'icon-192.png' },
+  { size: 512, name: 'icon-512.png' },
+  { size: 180, name: 'apple-touch-icon.png' },
+];
+
+async function run() {
+  const res = await fetch('icons/icon.svg');
+  const svgText = await res.text();
+  const blob = new Blob([svgText], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  img.onload = () => {
+    const out = document.getElementById('out');
+    for (const { size, name } of SIZES) {
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, size, size);
+      const item = document.createElement('div');
+      item.className = 'item';
+      const disp = document.createElement('div');
+      disp.appendChild(canvas);
+      canvas.style.width = Math.min(size, 160) + 'px';
+      canvas.style.height = Math.min(size, 160) + 'px';
+      const a = document.createElement('a');
+      a.className = 'dl';
+      a.textContent = name + ' をダウンロード';
+      a.href = canvas.toDataURL('image/png');
+      a.download = name;
+      item.appendChild(disp);
+      item.appendChild(a);
+      out.appendChild(item);
+    }
+    URL.revokeObjectURL(url);
+  };
+  img.src = url;
+}
+run();
+</script>
+</body>
+</html>
