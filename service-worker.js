@@ -3,7 +3,7 @@
  * 地図タイルは閲覧したぶんだけ実行時にキャッシュ(オフラインで再表示可)。
  * ユーザーデータ(体重・履歴)はlocalStorageにあり、ここでは扱わない。
  */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const SHELL_CACHE = `walkcal-shell-${VERSION}`;
 const TILE_CACHE = `walkcal-tiles-${VERSION}`;
 const TILE_LIMIT = 400; // タイルキャッシュの最大枚数
@@ -15,6 +15,9 @@ const SHELL_ASSETS = [
   './js/app.js',
   './manifest.webmanifest',
   './icons/icon.svg',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './apple-touch-icon.png',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
   'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
