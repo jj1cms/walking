@@ -1,20 +1,54 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#14b8a6"/>
-      <stop offset="1" stop-color="#0f766e"/>
+      <stop offset="0" stop-color="#1ed8bb"/>
+      <stop offset="0.5" stop-color="#0ba292"/>
+      <stop offset="1" stop-color="#075c63"/>
+    </linearGradient>
+    <radialGradient id="gloss" cx="0.28" cy="0.22" r="0.9">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/>
+      <stop offset="0.55" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="vig" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0.6" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#00211f" stop-opacity="0.35"/>
+    </linearGradient>
+    <linearGradient id="route" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff5e3a"/>
+      <stop offset="1" stop-color="#ff2d20"/>
     </linearGradient>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <!-- 歩く人 -->
-  <g fill="#ffffff">
-    <circle cx="296" cy="120" r="34"/>
-    <path d="M250 200
-             c8 -22 40 -28 58 -14
-             l44 34 c10 8 13 22 7 33 l-26 47 -34 -20 18 -33 -28 -22
-             -22 60 38 42 c7 8 9 14 9 22 l4 78 -38 0 -6 -74 -44 -48
-             c-10 -11 -13 -26 -8 -40 z"/>
-    <path d="M214 250 l-34 70 c-4 9 -12 14 -22 14 l-44 0 0 -36 34 0 30 -64 z"/>
-    <path d="M236 366 l-40 60 -32 -20 38 -58 z"/>
+
+  <!-- 背景 -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <rect width="512" height="512" fill="url(#vig)"/>
+  <rect width="512" height="512" fill="url(#gloss)"/>
+
+  <!-- GPS軌跡(歩行シルエットの背面) -->
+  <path d="M126 392 C 206 430 298 410 366 372" fill="none" stroke="url(#route)"
+        stroke-width="44" stroke-linecap="round" opacity="0.30"/>
+  <path d="M126 392 C 206 430 298 410 366 372" fill="none" stroke="url(#route)"
+        stroke-width="22" stroke-linecap="round"/>
+  <!-- スタート地点マーカー -->
+  <circle cx="126" cy="392" r="21" fill="#ffffff"/>
+  <circle cx="126" cy="392" r="13" fill="#ff2d20"/>
+
+  <!-- 接地影 -->
+  <ellipse cx="262" cy="410" rx="86" ry="16" fill="#00211f" opacity="0.18"/>
+
+  <!-- 歩く人(白シルエット) -->
+  <g fill="none" stroke="#ffffff" stroke-width="34" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 背中(脊柱) -->
+    <path d="M300 196 L 266 300"/>
+    <!-- 前の腕(前方へ) -->
+    <path d="M296 216 L 346 240"/>
+    <!-- 後ろの腕(後方へ) -->
+    <path d="M296 216 L 250 232"/>
+    <!-- 前の脚(前方へ) -->
+    <path d="M266 300 L 308 340 L 312 400"/>
+    <!-- 後ろの脚(蹴り出し) -->
+    <path d="M266 300 L 236 352 L 198 392"/>
   </g>
+  <!-- 頭 -->
+  <circle cx="300" cy="150" r="36" fill="#ffffff"/>
 </svg>
