@@ -3,7 +3,7 @@
  * 地図タイルは閲覧したぶんだけ実行時にキャッシュ(オフラインで再表示可)。
  * ユーザーデータ(体重・履歴)はlocalStorageにあり、ここでは扱わない。
  */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL_CACHE = `walkcal-shell-${VERSION}`;
 const TILE_CACHE = `walkcal-tiles-${VERSION}`;
 const TILE_LIMIT = 400; // タイルキャッシュの最大枚数
@@ -80,17 +80,34 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // それ以外(アプリ本体・Leaflet): cache-first、なければネットワーク
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request).then((res) => {
-        if (res && res.status === 200 && (url.startsWith(self.location.origin) || url.includes('unpkg.com'))) {
+  // アプリ本体(同一オリジン): network-first
+  // → オンラインなら常に最新コードを取得。オフライン時のみキャッシュにフォールバック
+  if (url.startsWith(self.location.origin)) {
+    event.respondWith(
+      fetch(request).then((res) => {
+        if (res && res.status === 200) {
           const copy = res.clone();
           caches.open(SHELL_CACHE).then((c) => c.put(request, copy));
         }
         return res;
-      }).catch(() => caches.match('./index.html'));
+      }).catch(() =>
+        caches.match(request).then((c) => c || caches.match('./index.html'))
+      )
+    );
+    return;
+  }
+
+  // Leaflet等のCDN(バージョン固定): cache-first
+  event.respondWith(
+    caches.match(request).then((cached) => {
+      if (cached) return cached;
+      return fetch(request).then((res) => {
+        if (res && res.status === 200 && url.includes('unpkg.com')) {
+          const copy = res.clone();
+          caches.open(SHELL_CACHE).then((c) => c.put(request, copy));
+        }
+        return res;
+      });
     })
   );
 });

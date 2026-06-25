@@ -93,6 +93,10 @@ body { overflow: hidden; }
   box-shadow: 0 -6px 24px rgba(0,0,0,.4);
 }
 
+.gps-status { text-align: center; font-size: 12px; color: var(--text-dim); margin-bottom: 8px; min-height: 16px; line-height: 1.5; }
+.gps-status.ok { color: #5ee6cf; }
+.gps-status.error { color: #f3a9b6; }
+
 .stat-main { display: flex; align-items: baseline; justify-content: center; gap: 6px; margin-bottom: 10px; }
 .stat-main-value { font-size: 46px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
 .stat-main-unit { font-size: 18px; color: var(--text-dim); font-weight: 600; }

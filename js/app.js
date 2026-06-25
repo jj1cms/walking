@@ -158,6 +158,48 @@ function setGpsBadge(state) {
   el.textContent = state === 'on' ? 'GPS ●' : state === 'wait' ? 'GPS …' : 'GPS';
 }
 
+function setGpsStatus(text, kind) {
+  const el = $('#gps-status');
+  if (!el) return;
+  el.textContent = text;
+  el.classList.remove('ok', 'error');
+  if (kind) el.classList.add(kind);
+}
+
+function geoErrorMessage(err) {
+  switch (err && err.code) {
+    case 1: return '位置情報が許可されていません。iPhoneの「設定→プライバシーとセキュリティ→位置情報サービス」をオンにし、Safari/このAppを「使用中のみ許可」＋「正確な位置情報オン」にしてください。';
+    case 2: return '現在地を取得できません。屋外や窓際で再度お試しください。';
+    case 3: return 'GPSの取得がタイムアウトしました。空の見える場所で再試行してください。';
+    default: return '位置情報の取得に失敗しました。';
+  }
+}
+
+// 単発で現在地を取得して地図に表示(計測前の確認用 / ◎ボタン)
+function locateOnce() {
+  if (!('geolocation' in navigator)) {
+    setGpsStatus('この端末は位置情報に対応していません', 'error');
+    return;
+  }
+  setGpsBadge('wait');
+  setGpsStatus('現在地を取得中…', null);
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude, longitude, accuracy } = pos.coords;
+      following = true;
+      setGpsBadge('on');
+      updateLocationMarker(latitude, longitude, accuracy);
+      map.setView([latitude, longitude], 17);
+      setGpsStatus(`現在地を取得しました（精度 ±${Math.round(accuracy)}m）`, 'ok');
+    },
+    (err) => {
+      setGpsBadge('off');
+      setGpsStatus(geoErrorMessage(err), 'error');
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
+  );
+}
+
 function startTracking() {
   const profile = getProfile();
   if (!profile.weightKg) {
@@ -178,9 +220,17 @@ function startTracking() {
   routeLine.setLatLngs([]);
   following = true;
   setGpsBadge('wait');
+  setGpsStatus('GPS信号を待っています…（屋外だと早く取得できます）', null);
+
+  // まず単発取得でプロンプト表示と初期位置の確定を行う
+  navigator.geolocation.getCurrentPosition(
+    (pos) => onPosition(pos),
+    (err) => onPositionError(err),
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
+  );
 
   session.watchId = navigator.geolocation.watchPosition(onPosition, onPositionError, {
-    enableHighAccuracy: true, maximumAge: 0, timeout: 20000,
+    enableHighAccuracy: true, maximumAge: 0, timeout: 30000,
   });
 
   startTick();
@@ -254,8 +304,15 @@ function onPosition(pos) {
   setGpsBadge('on');
   updateLocationMarker(latitude, longitude, accuracy);
 
-  if (session.status !== 'tracking') return;
-  if (accuracy > ACCURACY_MAX_M) return; // 精度が悪い点は採用しない
+  if (session.status !== 'tracking') {
+    setGpsStatus(`現在地を取得しました（精度 ±${Math.round(accuracy)}m）`, 'ok');
+    return;
+  }
+  if (accuracy > ACCURACY_MAX_M) {
+    setGpsStatus(`GPS精度が低いため待機中（±${Math.round(accuracy)}m）`, null);
+    return; // 精度が悪い点は採用しない
+  }
+  setGpsStatus(`GPS良好（±${Math.round(accuracy)}m）`, 'ok');
 
   const point = { lat: latitude, lng: longitude, t };
 
@@ -284,13 +341,15 @@ function onPosition(pos) {
 }
 
 function onPositionError(err) {
+  // タイムアウト(3)は計測中なら一時的な可能性があるのでバッジのみ更新
+  if (err && err.code === 3 && session.status === 'tracking') {
+    setGpsBadge('wait');
+    setGpsStatus('GPS信号が弱いです。空の見える場所へ移動してください…', null);
+    return;
+  }
   setGpsBadge('off');
-  const msg = {
-    1: '位置情報の利用が許可されていません。設定から許可してください。',
-    2: '位置情報を取得できません。屋外で再度お試しください。',
-    3: '位置情報の取得がタイムアウトしました。',
-  }[err.code] || '位置情報の取得に失敗しました。';
-  toast(msg);
+  setGpsStatus(geoErrorMessage(err), 'error');
+  toast(geoErrorMessage(err));
 }
 
 /* ---------- 時間表示 ---------- */
@@ -568,7 +627,11 @@ function bindEvents() {
   $('#btn-stop').addEventListener('click', stopTracking);
   $('#recenter').addEventListener('click', () => {
     following = true;
-    if (locationMarker) map.panTo(locationMarker.getLatLng());
+    if (session.status === 'tracking' && locationMarker) {
+      map.panTo(locationMarker.getLatLng());
+    } else {
+      locateOnce(); // 計測前は現在地を取得して表示
+    }
   });
 
   // 設定
@@ -633,6 +696,9 @@ function init() {
   maybeShowLock();
   invalidateMapSize();
   registerServiceWorker();
+
+  // 起動時に一度だけ現在地取得を試みる(権限プロンプトの表示と初期表示)
+  if (!getSecurity().enabled) setTimeout(locateOnce, 600);
 }
 
 document.addEventListener('DOMContentLoaded', init);
